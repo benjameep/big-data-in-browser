@@ -25,9 +25,15 @@ function printFirstValuesString(start, numBitsPerRow, uniqueValues, numValues, f
     } else if (numBitsPerRow == 16){
         arrayBuffer = new Uint16Array(fs.readFileSync(file));
     } 
-
+    
     for (let i = 0; i < numValues ; i++){
-        console.log(uniqueValues[arrayBuffer[start+i]]);
+        if (numBitsPerRow == 0) {
+            // This means there is only one possible value so we don't even need to read the dat file
+            console.log(uniqueValues[0]);
+        } else {
+            console.log(uniqueValues[arrayBuffer[start+i]]);
+        }
     }
+    
 }
 
