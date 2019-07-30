@@ -1,7 +1,7 @@
 const fs = require('fs');
 
 
-// var cylindersUnique = ["8", "4", "6", "3", "5"];
+var cylindersUnique = ["8", "4", "6", "3", "5"];
 
 var horsepowerUniqueValues = [ "130", "165", "150", "140", "198", "220", "215", "225",
     "190", "170", "160", "95", "97", "85", "88", "46", "87", "90", "113", "200", "210",
@@ -12,16 +12,17 @@ var horsepowerUniqueValues = [ "130", "165", "150", "140", "198", "220", "215", 
     "63", "48", "66", "139", "103", "125", "133", "138", "135", "142", "77", "62", "132", "84",
     "64", "74",  "116", "82" ];
 
-// console.log("Cylnders")
-// printFirstValues(0, 1, cylindersUnique, 50, "../data/auto-mpg/index_0.dat");
-console.log("\nHorsepwer")
-printFirstValues(784, 1, horsepowerUniqueValues, 50, "../data/auto-mpg/index_0.dat");
+console.log("Cylnders")
+printFirstValuesString(0, 8, cylindersUnique, 50, "../data/auto-mpg/index_0.dat");
 
-function printFirstValuesString(start, numBytesPerRpw, uniqueValues, numValues, file) {
+console.log("\nHorsepwer")
+printFirstValuesString(784, 8, horsepowerUniqueValues, 50, "../data/auto-mpg/index_0.dat");
+
+function printFirstValuesString(start, numBitsPerRow, uniqueValues, numValues, file) {
     var arrayBuffer
-    if (numBytesPerRpw == 1) {
+    if (numBitsPerRow == 8) {
         arrayBuffer = new Uint8Array(fs.readFileSync(file));
-    } else if (numBytesPerRpw == 2){
+    } else if (numBitsPerRow == 16){
         arrayBuffer = new Uint16Array(fs.readFileSync(file));
     } 
 
