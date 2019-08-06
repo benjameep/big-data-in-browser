@@ -1,0 +1,35 @@
+.actual_range {
+  fill: #3a0047;
+}
+
+.record_range {
+  fill: #b8b17a;
+  opacity: 0.75;
+}
+
+.norm_range {
+  fill: #756e47;
+  opacity: 0.5;
+}
+
+/* .axis path,
+.axis line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+} */
+
+/* .axis--x path,
+.axis--x line {
+  display: none;
+} */
+.axis--x .tick line {
+  fill: none;
+  shape-rendering: crispEdges;
+  stroke: black;
+  stroke-dasharray: 1, 2;
+  stroke-width: 1px;
+}
+/* .axis--x .tick text {
+  text-anchor: start;
+} */

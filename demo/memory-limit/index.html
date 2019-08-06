@@ -7,33 +7,34 @@
   <script>
     
     
-    function write(url, memory, offset=0){
-      fetch(url)
-        .then(response => response.arrayBuffer())
-        .then(buffer => {
-          // If we need to allocate more memory
-          var avaliable = memory.buffer.byteLength-offset
+    // function write(url, memory, offset=0){
+    //   fetch(url)
+    //     .then(response => response.arrayBuffer())
+    //     .then(buffer => {
+    //       // If we need to allocate more memory
+    //       var avaliable = memory.buffer.byteLength-offset
         
-          if(buffer.byteLength > avaliable){
-            var needed = buffer.byteLength - avaliable
-            var numpages = Math.ceil(needed / (64 * 1024))
-            console.log(`adding ${numpages} pages`)
-            memory.grow(numpages)
-          }
+    //       if(buffer.byteLength > avaliable){
+    //         var needed = buffer.byteLength - avaliable
+    //         var numpages = Math.ceil(needed / (64 * 1024))
+    //         console.log(`adding ${numpages} pages`)
+    //         memory.grow(numpages)
+    //       }
           
-          console.time('load time')
-          var source = new Uint32Array(buffer)
-          var target = new Uint32Array(memory.buffer)
-          target.set(source,offset)
-          console.timeEnd('load time')
+    //       console.time('load time')
+    //       var source = new Uint8Array(buffer)
+    //       var target = new Uint8Array(memory.buffer)
+    //       target.set(source,offset)
+    //       console.timeEnd('load time')
 
-          console.log(`loaded ${buffer.byteLength / 1e6} MB`)
-        })
-    }
+    //       console.log(`loaded ${buffer.byteLength / 1e6} MB`)
+    //     })
+    // }
 
-    var source = './large-file.dat'
-    var memory = new WebAssembly.Memory({initial:1})
-    write(source, memory)
+    // var source = './Transparency___Utah_Local_Government_Expense_2009-2019.zip'
+    // // var source = './Transparency___Utah_Local_Government_Expense_2010.csv'
+    // var memory = new WebAssembly.Memory({initial:1})
+    // write(source, memory)
 
   </script>
 </body>
