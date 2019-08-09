@@ -4,14 +4,14 @@ import { load, get } from './js/data.js'
 
 const dateStart = new Date(2015, 0, 1)
 const timeMeasure = d3.utcHour
-const timeInterval = 5
+const timeInterval = 1
 
 timeMeasure.offset(dateStart, timeInterval)
 
 var tempuraturePlot = MinMaxChart()
   .x((d,i) => timeMeasure.offset(dateStart, i*timeInterval))
-  .min((d,i) =>  +get('HourlyWetBulbTemperature',i))
-  .max((d,i) =>  +get('HourlyWetBulbTemperature',i))
+  .min((d,i) =>  +get('HourlyDryBulbTemperature',i)-10)
+  .max((d,i) =>  +get('HourlyDryBulbTemperature',i))
   
 // // var ctxPlot = ContextChart()
 // //   .x(d => parseDateTime(d.date))
@@ -21,6 +21,7 @@ load('./data/airport-data').then(() => {
   console.log(window.data)
 
   d3.select('#tempurature')
+    // .datum(Array(1000))    
     .datum(Array(metadata.numRows))    
     .call(tempuraturePlot)
   // d3.select('#ctx')

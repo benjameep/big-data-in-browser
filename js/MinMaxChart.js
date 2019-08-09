@@ -35,12 +35,12 @@ export default function MinMaxChart(){
       .merge(svg)
         .attr('viewBox', [0, 0, width + margin.left + margin.right, height + margin.top + margin.bottom])
       
-      var g = svg.selectAll('g').data([null])
+      var g = svg.selectAll('g').data(Array(1))
       g = g.enter().append('g')
       .merge(g)
         .attr('transform',`translate(${[margin.left,margin.top]})`)
       
-      var xAxisLabel = g.selectAll('axis--x').data([null])
+      var xAxisLabel = g.selectAll('.axis--x').data(Array(1))
       xAxisLabel.enter().append('g')
         .attr('class', 'axis axis--x')
         .attr('transform', `translate(${[0,height]})`)
@@ -53,11 +53,45 @@ export default function MinMaxChart(){
           .attr('dy','.5em')
         
       
-      var yAxisLabel = g.selectAll('axis--y').data([{}])
+      var yAxisLabel = g.selectAll('.axis--y').data(Array(1))
       yAxisLabel.enter().append('g')
         .attr('class', 'axis axis--y')
       .merge(yAxisLabel)
         .call(yAxis)
+
+      var canvas = g.selectAll('chart').data(Array(1))
+      canvas.enter().append('foreignObject')
+        .attr('class', 'chart')
+        .attr('width', width)
+        .attr('height', height)
+        .append('xhtml:canvas')
+          .attr('width', width)
+          .attr('height', height)
+      .merge(canvas)
+        .each(function(){
+          var ctx = this.getContext('2d')
+          ctx.clearRect(0,0,width, height)
+          var i = 0, size = data.length
+          for(; i < size; ++i){
+            // console.log(xfn(null,i), minfn(null,i), maxfn(null,i))
+            ctx.fillRect(
+              x(xfn(null,i)),
+              y(maxfn(null,i)),
+              width/size,
+              y(minfn(null,i)) - y(maxfn(null,i)),
+            )
+      //   .attr('x',(...a) => )
+      //   .attr('y',(...a) => y(maxfn(...a)))
+      //   .attr('width',width/data.length)
+      //   .attr('height',(...a) => y(minfn(...a)) - y(maxfn(...a)))
+          }
+        })
+        // .call(function (selection){
+        //   console.log(selection.)
+        //   // var ctx = this.getContext('2d')
+        //   // ctx.clearRect(0,0,width, height)
+        //   // ctx.fillRect(50,50,50,50)
+        // })
       
 
       // var records = g.selectAll('.record_range').data(data)
@@ -82,15 +116,15 @@ export default function MinMaxChart(){
       //   .attr('height',(...a) => y(nminfn(...a)) - y(nmaxfn(...a)))
       
 
-      var actual = g.selectAll('.actual_range').data(data)
-      actual.enter()
-        .append('rect')
-        .attr('class','actual_range')
-      .merge(actual)
-        .attr('x',(...a) => x(xfn(...a)))
-        .attr('y',(...a) => y(maxfn(...a)))
-        .attr('width',width/data.length)
-        .attr('height',(...a) => y(minfn(...a)) - y(maxfn(...a)))
+      // var actual = g.selectAll('.actual_range').data(data)
+      // actual.enter()
+      //   .append('rect')
+      //   .attr('class','actual_range')
+      // .merge(actual)
+      //   .attr('x',(...a) => x(xfn(...a)))
+      //   .attr('y',(...a) => y(maxfn(...a)))
+      //   .attr('width',width/data.length)
+      //   .attr('height',(...a) => y(minfn(...a)) - y(maxfn(...a)))
     })
   }
 
@@ -114,4 +148,8 @@ export default function MinMaxChart(){
   self.rmax = v => (rmaxfn=v,self)
   
   return self
+}
+
+function drawChart(){
+
 }

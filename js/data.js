@@ -39,10 +39,6 @@ export function get(colname, index){ // using window.data
   return buffer[index-k]
 }
 
-function main(data){
-  window.data = data
-}
-
 // var dir = '../../data/airport-data/'
 export function load (dir){
   if(!dir.endsWith('/')) dir += '/'
