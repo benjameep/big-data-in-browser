@@ -6,3 +6,5 @@ pkg/
 wasm-pack.log
 package-lock.json
 /**/target
+/**/deploy.sh
+/**/build
