@@ -8,7 +8,8 @@ const ignoreColumns = ["contract_name", "contract_number", "type", "Fiscal Perio
 class Data {
     state = {
         data: [],
-        fetchIndex: []
+        fetchIndex: [], 
+        fetchTimes:[]
     }
     
     fetchMetadata = async (refreshData) => {
@@ -35,7 +36,7 @@ class Data {
     }
     
     fetchData = async (datIndex, refreshData) => {
-        console.time(`fetch-data-${datIndex}`);
+        let fetchDataBegin = new Date();
         
         return axios.get(`${UTAH_EXPENDITURES_WOID_ROUNDED}/index_${datIndex}.dat`, 
                 {responseType: 'arraybuffer'}).then((response) => {
@@ -56,7 +57,10 @@ class Data {
                 datColumns[col] = buffer;
             }
             //TODO call setState in apps
-            console.timeEnd(`fetch-data-${datIndex}`);
+            let fetchDataEnd = new Date()
+            let timeToFetch = fetchDataEnd - fetchDataBegin
+            this.state.fetchTimes[datIndex] = timeToFetch
+            console.log(`Fetched dat index_${datIndex}.dat in ${timeToFetch} ms`);
             refreshData(this)
         })
     }
@@ -78,9 +82,6 @@ class Data {
                     this.fetchData(datIndex, this.state.refreshData);
                 }
             } else {
-                if(datIndex>0) {
-                    console.log("Fetching");
-                }
                 var buffer = columnBuffers[i]
                 var numBitsPerRow = columnMetadata[i].bufferMetadata[0].numBitsPerRow; 
                 var uniqueValues = columnMetadata[i].uniqueValues;
@@ -105,7 +106,7 @@ class Data {
     }
 
     getRowCount = ()  => { 
-        return 5000000
+        return 10000000
         // return 65536*100
         // return this.state.rowCount;
     }

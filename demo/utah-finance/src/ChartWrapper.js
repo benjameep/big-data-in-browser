@@ -4,7 +4,7 @@ import D3Chart from './D3Chart';
 export default class ChartWrapper extends Component {
 	componentDidMount() {
 		this.setState({
-			chart: new D3Chart(this.refs.chart, this.props.updateDay)
+			chart: new D3Chart(this.refs.chart)
 		})
 	}
 
@@ -15,7 +15,7 @@ export default class ChartWrapper extends Component {
 	componentWillReceiveProps(nextProps) {
 		if (nextProps.data !== null && nextProps.data !== undefined && 
 			this.state !== null && this.state !== undefined ) {
-			this.state.chart.update(nextProps.data, nextProps.currentDay)
+			this.state.chart.update(nextProps.data)
 		} 
 		
 	}

@@ -1,13 +1,10 @@
 import React, { Component } from 'react';
-import {Column, Table, ColumnSizer, Grid} from 'react-virtualized';
+import {Column, Table, ColumnSizer} from 'react-virtualized';
 import 'react-virtualized/styles.css'; // only needs to be imported once
 
 const columnWidth = 150;
 
 export default class VirtualDataTable extends Component {
-  constructor(props) {
-    super(props);
-  }
   state = { }
 
   componentDidMount() {
