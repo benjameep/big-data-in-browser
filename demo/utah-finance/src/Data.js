@@ -59,7 +59,7 @@ class Data {
             //TODO call setState in apps
             let fetchDataEnd = new Date()
             let timeToFetch = fetchDataEnd - fetchDataBegin
-            this.state.fetchTimes[datIndex] = timeToFetch
+            this.state.fetchTimes.push({"index": datIndex, "latency":timeToFetch})
             console.log(`Fetched dat index_${datIndex}.dat in ${timeToFetch} ms`);
             refreshData(this)
         })

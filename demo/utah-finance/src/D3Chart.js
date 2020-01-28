@@ -34,7 +34,7 @@ class D3Chart {
 		vis.g.append("text")
 			.attr("x", WIDTH / 2)
 			.attr("y", HEIGHT + 40)
-			.attr("font-size", 20)
+			.attr("font-size", 16)
 			.attr("text-anchor", "middle")
 			.text("Data Chunk");
 
@@ -42,7 +42,7 @@ class D3Chart {
 			.attr("x", -HEIGHT / 2)
 			.attr("y", -50)
 			.attr("transform", "rotate(-90)")
-			.attr("font-size", 20)
+			.attr("font-size", 16)
 			.attr("text-anchor", "middle")
 			.text("Load Time (ms)");
 
@@ -69,10 +69,10 @@ class D3Chart {
 		if (times !== null && 
 			times !== undefined)  {
 		
-			vis.x.domain([-2, (data.getRowCount()/65536)+5])
+			vis.x.domain([-2, (data.getRowCount()/65536)+6])
 			vis.y.domain([
-				d3.min(times, t => t) - 10, 
-				d3.max(times, t => t) + 10
+				d3.min(times, t => t.latency) - 10, 
+				d3.max(times, t => t.latency) + 10
 			])
 
 			const xAxisCall = d3.axisBottom(vis.x);
@@ -92,21 +92,21 @@ class D3Chart {
 
 			// Update
 			rects.transition().duration(500)
-				.attr("x", (d, i) => vis.x(i))
-				.attr("y", d =>  vis.y(d))
+				.attr("x", (d, i) => vis.x(d.index))
+				.attr("y", d =>  vis.y(d.latency))
 				.attr("width", 5)
-				.attr("height", d => HEIGHT - vis.y(d))
+				.attr("height", d => HEIGHT - vis.y(d.latency))
 				.attr("fill", "gray")
 
 			// Enter
 			rects.enter().append("rect")
-				.attr("x", (d, i) => vis.x(i))
+				.attr("x", (d, i) => vis.x(d.index))
 				.attr("width", 5)
 				.attr("fill", "black")
 				.attr("y", HEIGHT)
 				.transition().duration(500)
-					.attr("y", d =>  vis.y(d))
-					.attr("height", d => HEIGHT - vis.y(d))
+					.attr("y", d =>  vis.y(d.latency))
+					.attr("height", d => HEIGHT - vis.y(d.latency))
 
 		}
 	}
