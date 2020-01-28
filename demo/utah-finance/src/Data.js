@@ -15,10 +15,10 @@ class Data {
         var columnNames = null
         this.state.refreshData = refreshData;
         return axios.get(`${UTAH_EXPENDITURES_WOID_ROUNDED}/metadata.json`).then((response) => {
-            this.state.columnMetadata=response.data.columnMetadata;
+            var columnMetadata=response.data.columnMetadata;
             this.state.rowCount = response.data.numRows
             this.state.bufferCount = response.data.bufferCount
-            this.state.columnMetadata = this.state.columnMetadata.filter( (column, index) => {
+            this.state.columnMetadata = columnMetadata.filter( (column, index) => {
                 return !ignoreColumns.includes(column.name);
             })
             columnNames = ["row"]
@@ -35,8 +35,8 @@ class Data {
     }
     
     fetchData = async (datIndex, refreshData) => {
-        console.time('fetch data');
-        this.state.fetchIndex.push(datIndex)
+        console.time(`fetch-data-${datIndex}`);
+        
         return axios.get(`${UTAH_EXPENDITURES_WOID_ROUNDED}/index_${datIndex}.dat`, 
                 {responseType: 'arraybuffer'}).then((response) => {
             var datColumns = []
@@ -56,35 +56,40 @@ class Data {
                 datColumns[col] = buffer;
             }
             //TODO call setState in apps
-            console.timeEnd('fetch data');
+            console.timeEnd(`fetch-data-${datIndex}`);
             refreshData(this)
         })
     }
 
     getData = (params) => {
         var rowIndex = params.index
-        var row = {row: rowIndex+1}
+        var row = {row: (rowIndex+1).toLocaleString()}
         var columnMetadata = this.state.columnMetadata
         var datIndex = Math.floor(rowIndex/65536)
         var columnBuffers = this.state.data[datIndex]
         
-        for (let col=0; col < columnMetadata.length; col++) {
-            var colName = columnMetadata[col].name
+        
+        for (let i=0; i < columnMetadata.length; i++) {
+            var colName = columnMetadata[i].name
             if (columnBuffers == null) {
                 row[colName] = "Loading ..."
                 if (!this.state.fetchIndex.includes(datIndex)) {
+                    this.state.fetchIndex.push(datIndex)
                     this.fetchData(datIndex, this.state.refreshData);
                 }
             } else {
-                var buffer = columnBuffers[col]
-                var numBitsPerRow = columnMetadata[col].bufferMetadata[0].numBitsPerRow; 
-                var uniqueValues = columnMetadata[col].uniqueValues;
+                if(datIndex>0) {
+                    console.log("Fetching");
+                }
+                var buffer = columnBuffers[i]
+                var numBitsPerRow = columnMetadata[i].bufferMetadata[0].numBitsPerRow; 
+                var uniqueValues = columnMetadata[i].uniqueValues;
                 
                 if (numBitsPerRow === 0) {
                     // This means there is only one possible value so we don't need to read the dat file
                     row[colName] = uniqueValues[0];
                 } else {
-                    row[colName] = uniqueValues[buffer[rowIndex]];
+                    row[colName] = uniqueValues[buffer[rowIndex%65536]];
                 }
             } 
         }
@@ -100,7 +105,8 @@ class Data {
     }
 
     getRowCount = ()  => { 
-        return 65536*2
+        return 5000000
+        // return 65536*100
         // return this.state.rowCount;
     }
 
