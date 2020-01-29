@@ -1,10 +1,10 @@
 import React, { Component } from 'react';
-import D3Chart from './D3Chart';
+import LatencyChart from './LatencyChart';
 
-export default class ChartWrapper extends Component {
+export default class LatencyChartWrapper extends Component {
 	componentDidMount() {
 		this.setState({
-			chart: new D3Chart(this.refs.chart)
+			chart: new LatencyChart(this.refs.chart)
 		})
 	}
 

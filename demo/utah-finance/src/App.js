@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import VirtualDataTable from './VirtualDataTable'
-import ChartWrapper from './ChartWrapper';
+import LatencyChartWrapper from './LatencyChartWrapper';
 import Data from './Data';
 
 class App extends Component {
@@ -37,7 +37,7 @@ class App extends Component {
     }
 
     // this.updateDay(this.state.data[this.state.data.length]);
-    return <ChartWrapper data={this.state.data} />
+    return <LatencyChartWrapper data={this.state.data} />
   }
   
   render() {

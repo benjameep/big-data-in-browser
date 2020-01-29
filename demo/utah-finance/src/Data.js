@@ -1,8 +1,8 @@
 const axios = require('axios').default;
 
 const UTAH_EXPENDITURES_WOID_ROUNDED = "/UtahExpendituresWOIDRounded-CL"
-const UTAH_EXPENDITURES_WOID = "/UtahExpendituresWOID-CL"
-const AUTO_DATA = "/auto"
+// const UTAH_EXPENDITURES_WOID = "/UtahExpendituresWOID-CL"
+// const AUTO_DATA = "/auto"
 const ignoreColumns = ["contract_name", "contract_number", "type", "Fiscal Period", "batch_id", "Year Fiscal"]
 
 class Data {
@@ -31,6 +31,7 @@ class Data {
             this.state.columnNames = columnNames
             // console.log(response.data);
             refreshData(this)
+            this.state.fetchIndex.push(0)
             this.fetchData(0, refreshData)
         })
     }
@@ -43,24 +44,32 @@ class Data {
             var datColumns = []
             this.state.data[datIndex]=datColumns;
             var columnMetadata = this.state.columnMetadata
+            if (datIndex > 3157212/65536) {
+                console.log("Error with date column")
+                // Date 06/18/2014, 06/26/2014 1rst, 2nd unique value
+            }
+
             for (let col=0; col < columnMetadata.length; col++) {
-                var numBitsPerRow = columnMetadata[col].bufferMetadata[0].numBitsPerRow; 
-                var start = columnMetadata[col].bufferMetadata[0].start;
-                var numRows = columnMetadata[col].bufferMetadata[0].numRows;
+                var bufferMetadata = columnMetadata[col].bufferMetadata[datIndex]
+                var numBitsPerRow = bufferMetadata.numBitsPerRow; 
+                var start = bufferMetadata.start;
+                var numRows = bufferMetadata.numRows;
+                var numBytes = bufferMetadata.numBytes;
                 var buffer = null;
 
                 if (numBitsPerRow === 8) {
                     buffer = new Uint8Array(response.data.slice(start, start+numRows));
                 } else if (numBitsPerRow === 16){
-                    buffer = new Uint16Array(response.data.slice(start, 2*(start+numRows)));
+                    buffer = new Uint16Array(response.data.slice(start, start+(numRows*2)));
+                    console.log(buffer.length + " ?= 65536")
                 } 
                 datColumns[col] = buffer;
             }
-            //TODO call setState in apps
+            
             let fetchDataEnd = new Date()
             let timeToFetch = fetchDataEnd - fetchDataBegin
             this.state.fetchTimes.push({"index": datIndex, "latency":timeToFetch})
-            console.log(`Fetched dat index_${datIndex}.dat in ${timeToFetch} ms`);
+            // console.log(`Fetched dat index_${datIndex}.dat in ${timeToFetch} ms`);
             refreshData(this)
         })
     }
@@ -71,7 +80,6 @@ class Data {
         var columnMetadata = this.state.columnMetadata
         var datIndex = Math.floor(rowIndex/65536)
         var columnBuffers = this.state.data[datIndex]
-        
         
         for (let i=0; i < columnMetadata.length; i++) {
             var colName = columnMetadata[i].name
@@ -85,7 +93,7 @@ class Data {
                 var buffer = columnBuffers[i]
                 var numBitsPerRow = columnMetadata[i].bufferMetadata[0].numBitsPerRow; 
                 var uniqueValues = columnMetadata[i].uniqueValues;
-                
+
                 if (numBitsPerRow === 0) {
                     // This means there is only one possible value so we don't need to read the dat file
                     row[colName] = uniqueValues[0];
@@ -106,7 +114,7 @@ class Data {
     }
 
     getRowCount = ()  => { 
-        return 10000000
+        return 15000000
         // return 65536*100
         // return this.state.rowCount;
     }
