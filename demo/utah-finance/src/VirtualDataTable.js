@@ -14,20 +14,19 @@ export default class VirtualDataTable extends Component {
 	}
 
   render() {
-    console.log()
     if (this.props.data != null && this.props.data.hasMetadata()) {
       return (
         <ColumnSizer
           columnMaxWidth={150}
-          columnMinWidth={125}
+          columnMinWidth={120}
           columnCount={this.props.data.getColumnNames().length}
-          width={this.props.data.getColumnNames().length*125}>
+          width={this.props.data.getColumnNames().length*120}>
           {({adjustedWidth, getColumnWidth, registerChild}) => (
         <Table
           ref={registerChild}
           width={adjustedWidth}
           columnWidth={getColumnWidth}
-          height={window.innerHeight-200}
+          height={window.innerHeight-220}
           headerHeight={20}
           rowHeight={30}
           rowCount={this.props.data.getRowCount()}

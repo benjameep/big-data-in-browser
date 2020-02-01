@@ -1,27 +1,27 @@
 import * as d3 from 'd3'
-// import { parseDay } from './DataUtils'
 
 const MARGIN = { TOP: 10, BOTTOM: 80, LEFT: 100, RIGHT: 20 }
-const WIDTH = window.innerWidth - MARGIN.LEFT - MARGIN.RIGHT -10;
 const HEIGHT = 200 - MARGIN.TOP - MARGIN.BOTTOM;
 
-// const mindate = new Date(2019,4,6);
-// const maxdate = Date.now(); 
 
 class LatencyChart {
+	state = {
+		width : 1000
+	}
 
 	constructor(element) {
 		window.vis = this
 		const vis = this
+
 		vis.g = d3.select(element)
 			.append("svg")
-				.attr("width", WIDTH + MARGIN.LEFT + MARGIN.RIGHT)
+				.attr("width", this.state.width + MARGIN.LEFT + MARGIN.RIGHT)
 				.attr("height", HEIGHT + MARGIN.TOP + MARGIN.BOTTOM)
 			.append("g")
 				.attr("transform", `translate(${MARGIN.LEFT}, ${MARGIN.TOP})`)
 
 		vis.x = d3.scaleLinear()
-			.range([0, WIDTH])
+			.range([0, this.state.width])
 			
 	
 		vis.y = d3.scaleLog()
@@ -32,7 +32,7 @@ class LatencyChart {
 		vis.yAxisGroup = vis.g.append("g");
 
 		vis.g.append("text")
-			.attr("x", WIDTH / 2)
+			.attr("x", this.state.width / 2)
 			.attr("y", HEIGHT + 40)
 			.attr("font-size", 20)
 			.attr("text-anchor", "middle")
@@ -63,6 +63,10 @@ class LatencyChart {
 		}
 	}
 
+	updateWidth(width) {
+		this.state.width = width;
+	}
+
 	update(data) {
 		// const vis = window.vis
 		// const dataAll = vis.dataAll
@@ -91,21 +95,22 @@ class LatencyChart {
 			rects.exit().transition().duration(500)
 				.attr("height", 0)
 				.attr("y", HEIGHT)
-				.attr("x", WIDTH + 30)
+				.attr("x", this.state.width + 30)
 				.remove()
 
 			// Update
-			rects.transition().duration(500)
+			rects
 				.attr("x", (d, i) => vis.x(d.index))
+				.transition().duration(500)
 				.attr("y", d =>  vis.y(d.latency))
-				.attr("width", 5)
+				.attr("width", 4)
 				.attr("height", d => HEIGHT - vis.y(d.latency))
 				.attr("fill", d => this.chooseColor(d.latency))
 
 			// Enter
 			rects.enter().append("rect")
 				.attr("x", (d, i) => vis.x(d.index))
-				.attr("width", 5)
+				.attr("width", 4)
 				.attr("fill", d => this.chooseColor(d.latency))
 				.attr("y", HEIGHT)
 				.on("mouseover", function(d) {		

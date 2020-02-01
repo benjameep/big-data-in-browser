@@ -1,20 +1,30 @@
+import * as hdr from "hdr-histogram-js"
 const axios = require('axios').default;
+const pLimit = require('p-limit');
+
 
 const UTAH_EXPENDITURES_WOID_ROUNDED = "/UtahExpendituresWOIDRounded-CL"
 // const UTAH_EXPENDITURES_WOID = "/UtahExpendituresWOID-CL"
 // const AUTO_DATA = "/auto"
-const ignoreColumns = ["contract_name", "contract_number", "type", "Fiscal Period", "batch_id", "Year Fiscal"]
+const ignoreColumns = ["contract_name", "contract_number", "type", 
+    "FISCAL_PERIOD", "batch_id", "fiscal_year", "FISCAL_PERIOD_DATE"]
 
 class Data {
     state = {
         data: [],
         fetchIndex: [], 
-        fetchTimes:[]
+        fetchTimes:[],
+        uncompressedSize:0,
+        compressedSize:0,
+        histogram: hdr.build()
     }
     
+    resetSizes() {
+        this.state.compressedSize=6700000
+        this.state.uncompressedSize=0
+    }
     fetchMetadata = async (refreshData) => {
         var columnNames = null
-        this.state.refreshData = refreshData;
         return axios.get(`${UTAH_EXPENDITURES_WOID_ROUNDED}/metadata.json`).then((response) => {
             var columnMetadata=response.data.columnMetadata;
             this.state.rowCount = response.data.numRows
@@ -23,53 +33,59 @@ class Data {
                 return !ignoreColumns.includes(column.name);
             })
             columnNames = ["row"]
+            // let totalBytes = 0
             this.state.columnMetadata.map((column) => {
-                columnNames.push(column.name)      
+                columnNames.push(column.name)   
+                // totalBytes = totalBytes + column.originalSizeInBytes 
                 return null
             })
             this.state.columnCount = columnNames.length
             this.state.columnNames = columnNames
-            // console.log(response.data);
-            refreshData(this)
+            
+            // Size of orginal csv file
+            this.state.totalUncompressed = 13.9*1000000000; 
+            this.resetSizes()
             this.state.fetchIndex.push(0)
+            this.state.refreshData = refreshData
             this.fetchData(0, refreshData)
+            refreshData(this)
         })
     }
     
+    
     fetchData = async (datIndex, refreshData) => {
         let fetchDataBegin = new Date();
-        
         return axios.get(`${UTAH_EXPENDITURES_WOID_ROUNDED}/index_${datIndex}.dat`, 
                 {responseType: 'arraybuffer'}).then((response) => {
             var datColumns = []
             this.state.data[datIndex]=datColumns;
             var columnMetadata = this.state.columnMetadata
-            if (datIndex > 3157212/65536) {
-                console.log("Error with date column")
-                // Date 06/18/2014, 06/26/2014 1rst, 2nd unique value
-            }
+
+            this.state.compressedSize = this.state.compressedSize + response.data.byteLength
+            this.state.uncompressedSize = this.state.uncompressedSize + 
+                        (this.state.totalUncompressed/this.state.bufferCount)
 
             for (let col=0; col < columnMetadata.length; col++) {
                 var bufferMetadata = columnMetadata[col].bufferMetadata[datIndex]
                 var numBitsPerRow = bufferMetadata.numBitsPerRow; 
                 var start = bufferMetadata.start;
                 var numRows = bufferMetadata.numRows;
-                var numBytes = bufferMetadata.numBytes;
                 var buffer = null;
 
                 if (numBitsPerRow === 8) {
                     buffer = new Uint8Array(response.data.slice(start, start+numRows));
                 } else if (numBitsPerRow === 16){
                     buffer = new Uint16Array(response.data.slice(start, start+(numRows*2)));
-                    console.log(buffer.length + " ?= 65536")
                 } 
                 datColumns[col] = buffer;
             }
             
+            
             let fetchDataEnd = new Date()
             let timeToFetch = fetchDataEnd - fetchDataBegin
+            this.state.histogram.recordValue(timeToFetch)
             this.state.fetchTimes.push({"index": datIndex, "latency":timeToFetch})
-            // console.log(`Fetched dat index_${datIndex}.dat in ${timeToFetch} ms`);
+            
             refreshData(this)
         })
     }
@@ -103,6 +119,34 @@ class Data {
             } 
         }
         return row;
+    }
+
+    loadTable = async(numThreads, refreshData) => {
+        this.state.fetchTimes = []
+        this.resetSizes()
+        let begin = new Date()
+        var limit = pLimit(numThreads)
+        var downloadFiles = []
+        for (let i=0; i < 228; i++) {
+            downloadFiles.push(limit(() => this.fetchData(i, refreshData)))
+        }
+
+       await (async () => {
+            const result = await Promise.all(downloadFiles);
+            console.log(result);
+        })();
+        let end = new Date();
+        let time = end - begin
+        console.log(`Loaded in ${time/1000} seconds`)
+        console.log(hdr.encodeIntoBase64String(this.state.histogram));
+    }
+
+    getCompressedBytes = () => {
+        return `${(Math.round(this.state.compressedSize/1000000)).toLocaleString()} MB`
+    }
+
+    getUncompressedBytes = () => {
+        return `${Math.round(this.state.uncompressedSize/1000000).toLocaleString()} MB`
     }
 
     getMetadata = () => {
