@@ -16,6 +16,7 @@ class Data {
         fetchTimes:[],
         uncompressedSize:0,
         compressedSize:0,
+        amountByDatByDay: [],
         histogram: hdr.build()
     }
     
@@ -52,7 +53,6 @@ class Data {
         })
     }
     
-    
     fetchData = async (datIndex, refreshData) => {
         let fetchDataBegin = new Date();
         return axios.get(`${UTAH_EXPENDITURES_WOID_ROUNDED}/index_${datIndex}.dat`, 
@@ -88,6 +88,38 @@ class Data {
             
             refreshData(this)
         })
+        // .then(() => {
+        //     var amountByDatByDay = this.state.amountByDatByDay
+        //     if (amountByDatByDay[datIndex] === null ||  amountByDatByDay[datIndex] === undefined) {
+        //         var totalsByDate = {}
+        //         for (var i=datIndex*65536; i < (datIndex+1)*65536 ; i++) {
+        //             var dateAmount = this.getDateAmount(i)
+        //             if (totalsByDate[dateAmount.date] === null || 
+        //                     totalsByDate[dateAmount.date] === undefined) {
+        //                 totalsByDate[dateAmount.date] = dateAmount.amount
+        //             } else {
+        //                 totalsByDate[dateAmount.date] += dateAmount.amount
+        //             }
+        //         }
+        //         this.state.amountByDatByDay[datIndex] = totalsByDate
+        //         refreshData(this)
+        //     }
+        // })
+    }
+
+    getDateAmount = (rowIndex) => {
+        // This is specific to the Utah Expenditure Dataset
+        var columnMetadata = this.state.columnMetadata
+        var datIndex = Math.floor(rowIndex/65536)
+        var columnBuffers = this.state.data[datIndex]
+
+        var dateUniqueValues = columnMetadata[0].uniqueValues;
+        var amountUniqueValues = columnMetadata[1].uniqueValues;
+
+        return {
+            date: dateUniqueValues[columnBuffers[0][rowIndex%65536]],
+            amount: parseInt(amountUniqueValues[columnBuffers[1][rowIndex%65536]])
+        }
     }
 
     getData = (params) => {
@@ -127,13 +159,12 @@ class Data {
         let begin = new Date()
         var limit = pLimit(numThreads)
         var downloadFiles = []
-        for (let i=0; i < 228; i++) {
+        for (let i=0; i < 229; i++) {
             downloadFiles.push(limit(() => this.fetchData(i, refreshData)))
         }
 
        await (async () => {
             const result = await Promise.all(downloadFiles);
-            console.log(result);
         })();
         let end = new Date();
         let time = end - begin

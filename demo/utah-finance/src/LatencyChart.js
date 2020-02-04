@@ -1,12 +1,12 @@
 import * as d3 from 'd3'
 
 const MARGIN = { TOP: 10, BOTTOM: 80, LEFT: 100, RIGHT: 20 }
-const HEIGHT = 200 - MARGIN.TOP - MARGIN.BOTTOM;
+const HEIGHT = 400 - MARGIN.TOP - MARGIN.BOTTOM;
 
 
 class LatencyChart {
 	state = {
-		width : 1000
+		width : 1200
 	}
 
 	constructor(element) {

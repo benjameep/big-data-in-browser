@@ -8,7 +8,7 @@ export default class MemoryView extends Component {
 	componentDidMount() {
 		this.setState({
 			data: this.props.data,
-			numThreads: 5
+			numThreads: 2
 		})
 	}
 
@@ -36,7 +36,7 @@ export default class MemoryView extends Component {
 					<b>{"Compressed Size:"}</b>
 					<div>{this.props.data.getCompressedBytes()}</div>
 					<button onClick={this.loadTable}>Load Table</button><br/>
-					# Concurrent: &nbsp;&nbsp; <input stype="text" size="1" value={this.state.numThreads} onChange={this.handleChange} />
+					
 				</div>
 
 		} else {
@@ -46,3 +46,4 @@ export default class MemoryView extends Component {
 		}
 	}
 }
+// # Concurrent: &nbsp;&nbsp; <input stype="text" size="1" value={this.state.numThreads} onChange={this.handleChange} />

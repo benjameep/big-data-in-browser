@@ -4,6 +4,7 @@ import Col from 'react-bootstrap/Col';
 import Container from 'react-bootstrap/Container';
 import VirtualDataTable from './VirtualDataTable'
 import LatencyChartWrapper from './LatencyChartWrapper';
+import FinanceChartWrapper from './FinanceChartWrapper';
 import MemoryView from './MemoryView';
 import Data from './Data';
 
@@ -35,12 +36,20 @@ class App extends Component {
   }
 
   
-  renderChart() {
+  renderLatencyChart() {
     if (this.state.length === 0) {
       return "No Data Yet";
     }
 
     return <LatencyChartWrapper data={this.state.data} />
+  }
+
+  renderExpenseChart() {
+    if (this.state.length === 0) {
+      return "No Data Yet";
+    }
+
+    return <FinanceChartWrapper data={this.state.data} />
   }
   
   render() {
@@ -48,9 +57,8 @@ class App extends Component {
 
       <Container id="mainContainer">
           <Row>
-            <Col md={10}>{this.renderChart()}</Col>
+            <Col md={10}>{this.renderLatencyChart()}</Col>
             <Col md={2}><MemoryView data={this.state.data} refreshData={this.refreshData}/> </Col>
-            
           </Row>
           <Row>
             <Col md={12}><VirtualDataTable data={this.state.data}/></Col>
@@ -61,4 +69,7 @@ class App extends Component {
 
 }
 
+      // <Row>
+      //       <Col md={10}>{this.renderExpenseChart()}</Col>
+      //     </Row>
 export default App;

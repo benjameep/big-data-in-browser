@@ -46,6 +46,6 @@ export default class LatencyChartWrapper extends Component {
 	}
 
 	render() {
-		return <div className="chart-area" ref="chart"/>
+		return <div className="latency-chart-area" ref="chart"/>
 	}
 }
