@@ -26,10 +26,10 @@ export default class VirtualDataTable extends Component {
           ref={registerChild}
           width={adjustedWidth}
           columnWidth={getColumnWidth}
-          height={window.innerHeight-420}
+          height={window.innerHeight-470}
           headerHeight={20}
           rowHeight={30}
-          rowCount={this.props.data.getRowCount()}
+          rowCount={this.props.data.getTableRowCount()}
           rowGetter={this.props.data.getData}>
           {this.renderColumns()}
         </Table>

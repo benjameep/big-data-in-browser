@@ -6,7 +6,7 @@ const HEIGHT = 400 - MARGIN.TOP - MARGIN.BOTTOM;
 
 class LatencyChart {
 	state = {
-		width : 1200
+		width : 1100
 	}
 
 	constructor(element) {
@@ -36,7 +36,7 @@ class LatencyChart {
 			.attr("y", HEIGHT + 40)
 			.attr("font-size", 20)
 			.attr("text-anchor", "middle")
-			.text("Data Chunk");
+			.text("Rows Loaded");
 
 		vis.g.append("text")
 			.attr("x", -HEIGHT / 2)
@@ -74,25 +74,25 @@ class LatencyChart {
 		const vis = window.vis
 		if (times !== null && 
 			times !== undefined)  {
-		
-			vis.x.domain([-2, (data.getRowCount()/65536)+6])
-			vis.y.domain([1, 5000])
+			vis.x.domain([0, d3.max(times, time => time.index) * 65536])
+			vis.y.domain([1, 10000])
 			const xAxisCall = d3.axisBottom(vis.x);
-			vis.xAxisGroup.transition(1000).call(xAxisCall)
+			vis.xAxisGroup.transition(300).call(xAxisCall)
 			const yAxisCall = d3.axisLeft(vis.y)
-					.tickValues([100, 1000, 5000])
+					.tickValues([100, 1000, 10000])
 					.tickFormat(function(d){
 						var p = d3.format("~r")(d);
 						return p+' ms';
 					  })
 					// .tickFormat(d3.format("~r"));
-			vis.yAxisGroup.transition(1000).call(yAxisCall)
+			vis.yAxisGroup.call(yAxisCall)
+			//transition(300)
 
 			const rects = vis.g.selectAll("rect")
 				.data(times)
 	
 			// Exit
-			rects.exit().transition().duration(500)
+			rects.exit()//.transition().duration(500)
 				.attr("height", 0)
 				.attr("y", HEIGHT)
 				.attr("x", this.state.width + 30)
@@ -100,19 +100,21 @@ class LatencyChart {
 
 			// Update
 			rects
-				.attr("x", (d, i) => vis.x(d.index))
-				.transition().duration(500)
+				.attr("x", (d, i) => vis.x(d.index*65536))
+				// .transition().duration(300)
 				.attr("y", d =>  vis.y(d.latency))
-				.attr("width", 4)
+				.attr("width", 3)
 				.attr("height", d => HEIGHT - vis.y(d.latency))
 				.attr("fill", d => this.chooseColor(d.latency))
 
 			// Enter
 			rects.enter().append("rect")
-				.attr("x", (d, i) => vis.x(d.index))
-				.attr("width", 4)
+				.attr("x", (d, i) => vis.x(d.index*65536))
+				.attr("width", 3)
 				.attr("fill", d => this.chooseColor(d.latency))
-				.attr("y", HEIGHT)
+				// .attr("y", HEIGHT)
+				.attr("y", d =>  vis.y(d.latency))
+				.attr("height", d => HEIGHT - vis.y(d.latency))
 				.on("mouseover", function(d) {		
 					vis.div.transition()		
 						.duration(200)		
@@ -125,9 +127,8 @@ class LatencyChart {
 					vis.div.transition()		
 						.duration(500)		
 						.style("opacity", 0)})
-				.transition().duration(500)
-					.attr("y", d =>  vis.y(d.latency))
-					.attr("height", d => HEIGHT - vis.y(d.latency))
+				// .transition().duration(300)
+					
 
 		}
 	}

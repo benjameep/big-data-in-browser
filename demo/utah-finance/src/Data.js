@@ -17,13 +17,16 @@ class Data {
         uncompressedSize:0,
         compressedSize:0,
         amountByDatByDay: [],
-        histogram: hdr.build()
+        histogram: hdr.build(),
+        tableLoadTime: 0,
+        graphLoadTime: 0
     }
     
     resetSizes() {
         this.state.compressedSize=6700000
         this.state.uncompressedSize=0
     }
+
     fetchMetadata = async (refreshData) => {
         var columnNames = null
         return axios.get(`${UTAH_EXPENDITURES_WOID_ROUNDED}/metadata.json`).then((response) => {
@@ -48,13 +51,13 @@ class Data {
             this.resetSizes()
             this.state.fetchIndex.push(0)
             this.state.refreshData = refreshData
-            this.fetchData(0, refreshData)
+            this.fetchData(0, refreshData, false)
             refreshData(this)
         })
     }
     
     fetchData = async (datIndex, refreshData) => {
-        let fetchDataBegin = new Date();
+        const fetchDataBegin = new Date();
         return axios.get(`${UTAH_EXPENDITURES_WOID_ROUNDED}/index_${datIndex}.dat`, 
                 {responseType: 'arraybuffer'}).then((response) => {
             var datColumns = []
@@ -84,28 +87,36 @@ class Data {
             let fetchDataEnd = new Date()
             let timeToFetch = fetchDataEnd - fetchDataBegin
             this.state.histogram.recordValue(timeToFetch)
-            this.state.fetchTimes.push({"index": datIndex, "latency":timeToFetch})
-            
+            this.state.fetchTimes.push({"index": datIndex, "latency": timeToFetch})
+            console.log(`Fetched ${datIndex} in ${timeToFetch} ms`)
             refreshData(this)
         })
-        // .then(() => {
-        //     var amountByDatByDay = this.state.amountByDatByDay
-        //     if (amountByDatByDay[datIndex] === null ||  amountByDatByDay[datIndex] === undefined) {
-        //         var totalsByDate = {}
-        //         for (var i=datIndex*65536; i < (datIndex+1)*65536 ; i++) {
-        //             var dateAmount = this.getDateAmount(i)
-        //             if (totalsByDate[dateAmount.date] === null || 
-        //                     totalsByDate[dateAmount.date] === undefined) {
-        //                 totalsByDate[dateAmount.date] = dateAmount.amount
-        //             } else {
-        //                 totalsByDate[dateAmount.date] += dateAmount.amount
-        //             }
-        //         }
-        //         this.state.amountByDatByDay[datIndex] = totalsByDate
-        //         refreshData(this)
-        //     }
-        // })
+        .then(() => {
+            // var timeStart = new Date()
+            var amountByDatByDay = this.state.amountByDatByDay
+            if (amountByDatByDay[datIndex] === null ||  amountByDatByDay[datIndex] === undefined) {
+                var totalsByDate = {}
+                var numRowsInDat = this.state.columnMetadata[1].bufferMetadata[datIndex].numRows
+                var start = datIndex*65536
+                var end = start + numRowsInDat
+                for (var i=start; i < end ; i++) {
+                    var dateAmount = this.getDateAmount(i)
+                    var monthYear = `${dateAmount.date.substring(0,2)}-${dateAmount.date.substring(6)}`
+                    if (totalsByDate[monthYear] === null ||  totalsByDate[monthYear] === undefined) {
+                        totalsByDate[monthYear] = dateAmount.amount
+                    } else {
+                        totalsByDate[monthYear] = totalsByDate[monthYear] + dateAmount.amount
+                    }
+                }
+                this.state.amountByDatByDay[datIndex] = totalsByDate
+                refreshData(this)
+            }
+            // let fetchDataEnd = new Date()
+            // let timeToFetch = fetchDataEnd - timeStart
+            // console.log("Time to Summarize " + timeToFetch + " ms")
+        })
     }
+
 
     getDateAmount = (rowIndex) => {
         // This is specific to the Utah Expenditure Dataset
@@ -153,23 +164,33 @@ class Data {
         return row;
     }
 
-    loadTable = async(numThreads, refreshData) => {
+    loadTable = async(numThreads, refreshData, datFileCount) => {
         this.state.fetchTimes = []
         this.resetSizes()
         let begin = new Date()
         var limit = pLimit(numThreads)
         var downloadFiles = []
-        for (let i=0; i < 229; i++) {
+        for (let i=0; i < datFileCount; i++) {
             downloadFiles.push(limit(() => this.fetchData(i, refreshData)))
         }
 
        await (async () => {
-            const result = await Promise.all(downloadFiles);
+            await Promise.all(downloadFiles);
         })();
         let end = new Date();
         let time = end - begin
+        if (datFileCount > 160) {
+            this.state.graphLoadTime = time/1000.0
+        } else {
+            this.state.tableLoadTime = time/1000.0
+        }
+        refreshData(this)
         console.log(`Loaded in ${time/1000} seconds`)
         console.log(hdr.encodeIntoBase64String(this.state.histogram));
+    }
+
+    getNumRowsLoaded = () => {
+        return this.state.fetchTimes.length * 65536
     }
 
     getCompressedBytes = () => {
@@ -188,10 +209,16 @@ class Data {
         return this.state.columnMetadata != null;
     }
 
-    getRowCount = ()  => { 
-        return 15000000
+    getTableRowCount = ()  => { 
+        return 10027008
         // return 65536*100
         // return this.state.rowCount;
+    }
+
+    getGraphRowCount = ()  => { 
+        // return 30000000
+        // return 65536*100
+        return this.state.rowCount;
     }
 
     getColumnCount = () => {

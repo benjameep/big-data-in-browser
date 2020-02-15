@@ -18,7 +18,13 @@ export default class MemoryView extends Component {
 	}
 
 	loadTable = () => {
-		this.props.data.loadTable(parseInt(this.state.numThreads, 10), this.props.refreshData)
+		this.props.data.loadTable(parseInt(this.state.numThreads, 10), 
+				this.props.refreshData, this.props.data.getTableRowCount()/65536)
+	}
+
+	loadGraph = () => {
+		this.props.data.loadTable(parseInt(this.state.numThreads, 10), 
+					this.props.refreshData, this.props.data.getGraphRowCount()/65536)
 	}
 
 	handleChange = (event) => {
@@ -31,12 +37,15 @@ export default class MemoryView extends Component {
 		if (this.props.data != null) {
             
 			return <div>
-					<b>{"Uncompressed Size:"}</b>
-					<div>{this.props.data.getUncompressedBytes()}</div>
-					<b>{"Compressed Size:"}</b>
-					<div>{this.props.data.getCompressedBytes()}</div>
-					<button onClick={this.loadTable}>Load Table</button><br/>
-					
+					<div><b>Rows: </b>{this.props.data.getNumRowsLoaded().toLocaleString()}</div>
+					<div><b>{"Uncompressed Size:"}</b><br/>
+					{this.props.data.getUncompressedBytes()}</div>
+					<div><b>{"Compressed Size:"}</b><br/>
+					{this.props.data.getCompressedBytes()}</div>
+					<br/>
+					<button onClick={this.loadTable}>Load Table</button> {this.props.data.state.tableLoadTime} sec<br/>
+					<br/>
+					<button onClick={this.loadGraph}>Load Graph</button> {this.props.data.state.graphLoadTime} sec<br/>
 				</div>
 
 		} else {

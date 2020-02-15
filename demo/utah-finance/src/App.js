@@ -7,6 +7,8 @@ import LatencyChartWrapper from './LatencyChartWrapper';
 import FinanceChartWrapper from './FinanceChartWrapper';
 import MemoryView from './MemoryView';
 import Data from './Data';
+import Tabs from 'react-bootstrap/Tabs'
+import Tab from 'react-bootstrap/Tab'
 
 class App extends Component {
 
@@ -21,7 +23,7 @@ class App extends Component {
     })
   }
 
-  componentWillMount() {
+  componentDidMount() {
     console.time('fetchMetadata');
 
     const data = new Data()
@@ -57,7 +59,17 @@ class App extends Component {
 
       <Container id="mainContainer">
           <Row>
-            <Col md={10}>{this.renderLatencyChart()}</Col>
+          <Col md={10}>
+            <Tabs defaultActiveKey="profile" id="uncontrolled-tab-example">
+              <Tab eventKey="home" title="Expenses Per Month">
+                {this.renderExpenseChart()}
+              </Tab>
+              <Tab eventKey="profile" title="Latency">
+                {this.renderLatencyChart()}
+              </Tab>
+              
+            </Tabs>
+            </Col>
             <Col md={2}><MemoryView data={this.state.data} refreshData={this.refreshData}/> </Col>
           </Row>
           <Row>
@@ -69,7 +81,4 @@ class App extends Component {
 
 }
 
-      // <Row>
-      //       <Col md={10}>{this.renderExpenseChart()}</Col>
-      //     </Row>
 export default App;

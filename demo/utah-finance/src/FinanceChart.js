@@ -1,13 +1,13 @@
 import * as d3 from 'd3'
 
 const MARGIN = { TOP: 10, BOTTOM: 80, LEFT: 100, RIGHT: 20 }
-const HEIGHT = 200 - MARGIN.TOP - MARGIN.BOTTOM;
+const HEIGHT = 400 - MARGIN.TOP - MARGIN.BOTTOM;
 
 
 
 class FinanceChart {
 	state = {
-		width : 1000
+		width : 1100
 	}
 
 	constructor(element) {
@@ -40,11 +40,11 @@ class FinanceChart {
 
 		vis.g.append("text")
 			.attr("x", -HEIGHT / 2)
-			.attr("y", -60)
+			.attr("y", -70)
 			.attr("transform", "rotate(-90)")
 			.attr("font-size", 20)
 			.attr("text-anchor", "middle")
-			.text("Expense");
+			.text("Utah Expenses Per Month");
 
 		vis.div = d3.select("body").append("div")	
 			.attr("class", "tooltip")				
@@ -52,7 +52,7 @@ class FinanceChart {
 	}
 
     parseDay(d) {
-        return d3.timeParse("%m/%d/%Y")(d); 
+        return d3.timeParse("%m-%Y")(d); 
     } 
     // parseDay = d3.timeParse("%Y-%m-%d");
 
@@ -85,18 +85,20 @@ class FinanceChart {
         }
         const returnData = []
         Object.keys(byDay).map(i => {
-           returnData.push({
+			var val = {
                 date: i, 
                 amount: byDay[i]
-           })
+		   	}
+			returnData.push(val)
+			return val
         })
         return returnData;
     }
 
 	update(data) {
         var dataByDay = this.calculateByDay(data.state.amountByDatByDay)
-        console.log("---> " + JSON.stringify(data.state.amountByDatByDay))
-        console.log("     " + JSON.stringify(dataByDay))
+        // console.log("---> " + JSON.stringify(data.state.amountByDatByDay))
+        // console.log("     " + JSON.stringify(dataByDay))
         if (dataByDay === null || dataByDay.length ===0) {
             return
         }
@@ -104,7 +106,9 @@ class FinanceChart {
 		if (dataByDay !== null && 
 			dataByDay !== undefined)  {
 		
-            vis.x.domain([this.parseDay(dataByDay[0].date), this.parseDay(dataByDay[dataByDay.length-1].date)])
+            vis.x.domain([
+				d3.min(dataByDay, day => this.parseDay(day.date)), 
+				d3.max(dataByDay, day => this.parseDay(day.date))])
             // vis.y.domain([
 			// 	d3.min(data, d => Number(d.MinTemp)) - 10, 
 			// 	d3.max(data, d => Number(d.MaxTemp)) + 10
@@ -115,15 +119,15 @@ class FinanceChart {
                 d3.max(dataByDay, day => day.amount)
             ])
 			const xAxisCall = d3.axisBottom(vis.x);
-			vis.xAxisGroup.transition(1000).call(xAxisCall)
+			vis.xAxisGroup.call(xAxisCall) //transition(1000).
 			const yAxisCall = d3.axisLeft(vis.y)
-			vis.yAxisGroup.transition(1000).call(yAxisCall)
+			vis.yAxisGroup.call(yAxisCall) // transition(1000)
 
 			const rects = vis.g.selectAll("rect")
 				.data(dataByDay)
 	
 			// Exit
-			rects.exit().transition().duration(500)
+			rects.exit()//.transition().duration(500)
 				.attr("height", 0)
 				.attr("y", HEIGHT)
 				.attr("x", this.state.width + 30)
@@ -132,23 +136,25 @@ class FinanceChart {
 			// Update
 			rects
 				.attr("x", (d, i) => vis.x(this.parseDay(d.date)))
-				.transition().duration(500)
+				//.transition().duration(500)
 				.attr("y", d =>  vis.y(d.amount))
-				.attr("width", 4)
+				.attr("width", 5)
 				.attr("height", d => HEIGHT - vis.y(d.amount))
 				.attr("fill", d => this.chooseColor(d.amount))
 
 			// Enter
 			rects.enter().append("rect")
 				.attr("x", (d, i) => vis.x(this.parseDay(d.date)))
-				.attr("width", 4)
+				.attr("width", 5)
 				.attr("fill", d => this.chooseColor(d.amount))
-				.attr("y", HEIGHT)
+				// .attr("y", HEIGHT)
+				.attr("y", d =>  vis.y(d.amount))
+				.attr("height", d => HEIGHT - vis.y(d.amount))
 				.on("mouseover", function(d) {		
 					vis.div.transition()		
 						.duration(200)		
 						.style("opacity", .9);		
-					vis.div.html(`Chunk ${d.date}<br/>$${d.amount}`)	
+					vis.div.html(`${d.date}<br/>$${d.amount}`)	
 						.style("left", (d3.event.pageX) + "px")		
 						.style("top", (d3.event.pageY - 40) + "px");	
 					})					
@@ -156,9 +162,8 @@ class FinanceChart {
 					vis.div.transition()		
 						.duration(500)		
 						.style("opacity", 0)})
-				.transition().duration(500)
-					.attr("y", d =>  vis.y(d.amount))
-					.attr("height", d => HEIGHT - vis.y(d.amount))
+				// .transition().duration(500)
+					
 
 		}
 	}
